@@ -1,34 +1,43 @@
 package com.example.bakeryapp.cart.presentation
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.bakeryapp.cart.data.CartRepository
-import com.example.bakeryapp.catalog.presentation.Category
-import com.example.bakeryapp.catalog.presentation.Product
+import com.example.bakeryapp.cart.domain.CartObject
+import com.example.bakeryapp.cart.domain.toEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class CartViewModel(
     val repository: CartRepository
-): ViewModel() {
+) : ViewModel() {
     val stateFlow = MutableStateFlow(
         CartState(
             cartItems = listOf(),
+            errorText = "",
+            showError = false,
             sum = 0f,
-            deliveryAdress = ""
+            deliveryAdress = "",
+            cartLoaded = false,
+            buttonEnabled = true
         )
     )
 
     fun dispatch(event: CartEvent, navController: NavController) {
-        when(event) {
+        when (event) {
             is CartEvent.onOrder -> {
-                if(stateFlow.value.deliveryAdress != "")
+                stateFlow.value = stateFlow.value.copy(buttonEnabled = false)
+                if (stateFlow.value.deliveryAdress != "")
                     viewModelScope.launch {
                         repository.order(stateFlow.value.deliveryAdress)
                         loadCart()
                     }
+                else {
+                    stateFlow.value =
+                        stateFlow.value.copy(showError = true, errorText = "Заполните адресс")
+                }
+                stateFlow.value = stateFlow.value.copy(buttonEnabled = true)
             }
 
             CartEvent.loadCarts -> {
@@ -41,8 +50,7 @@ class CartViewModel(
                         val updatedItem = event.value.copy(quantity = event.value.quantity - 1)
                         if (updatedItem.quantity <= 0) {
                             loadCart()
-                        }
-                        else {
+                        } else {
                             val updatedCarts = stateFlow.value.cartItems
                                 .map {
                                     if (it.id == event.value.id) updatedItem else it
@@ -53,6 +61,7 @@ class CartViewModel(
                     get_sum()
                 }
             }
+
             is CartEvent.plus -> {
                 viewModelScope.launch {
                     if (repository.plusToCart(event.value) == 200) {
@@ -86,25 +95,15 @@ class CartViewModel(
     fun loadCart() {
         viewModelScope.launch {
             try {
-                val response: MutableList<CartObject> = repository.getCarts().map {
-                    CartObject(
-                        id = it.cart_item_id,
-                        userId = it.user_id,
-                        quantity = it.quantity,
-                        short_product = ShortProduct(
-                            id = it.Products.product_id,
-                            title = it.Products.name,
-                            price = it.Products.price,
-                            imageUrl = it.Products.image_url,
-                        ),
-                    )
-                }.toMutableList()
+                val response: MutableList<CartObject> =
+                    repository.getCarts().toEntity().toMutableList()
                 stateFlow.value = stateFlow.value.copy(cartItems = response)
                 get_sum()
-            }
-            catch (e: Exception) {
+            } catch (e: Exception) {
 
             }
+            stateFlow.value = stateFlow.value.copy(cartLoaded = true)
+
         }
     }
 

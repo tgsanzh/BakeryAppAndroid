@@ -1,46 +1,48 @@
-package com.example.bakeryapp.login.presentation
+package com.example.bakeryapp.register.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import com.example.bakeryapp.login.data.LoginRepository
-import com.example.bakeryapp.login.data.LoginRequest
-import com.example.bakeryapp.login.data.LoginResponse
 import com.example.bakeryapp.login.domain.ValidateNumberUseCase
 import com.example.bakeryapp.login.domain.ValidatePasswordUseCase
+import com.example.bakeryapp.register.data.RegisterRepository
+import com.example.bakeryapp.register.data.RegisterRequest
+import com.example.bakeryapp.register.data.RegisterResponse
 import com.example.bakeryapp.resetHttpClient
 import com.example.bakeryapp.utils.SharedPrefs
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
-class LoginViewModel(
-    val repository: LoginRepository,
+class RegisterViewModel(
+    val repository: RegisterRepository,
     val sharedPrefs: SharedPrefs,
-    val validateNumberUseCase: ValidateNumberUseCase,
-    val validatePasswordUseCase: ValidatePasswordUseCase
+    val validatePasswordUseCase: ValidatePasswordUseCase,
+    val validateNumberUseCase: ValidateNumberUseCase
 ) : ViewModel() {
     val stateFlow = MutableStateFlow(
-        LoginState(
+        RegisterState(
             number = "",
             password = "",
+            confirmPassword = "",
             errorText = "",
             showError = false,
             buttonEnabled = true,
         )
     )
 
-    fun dispatch(event: LoginEvent, navController: NavController) {
+    fun dispatch(event: RegisterEvent, navController: NavController) {
         when (event) {
-            is LoginEvent.login -> {
-                if (validateNumberUseCase(stateFlow.value.number) && validatePasswordUseCase(
-                        stateFlow.value.password
-                    )
+            is RegisterEvent.register -> {
+                if (
+                    validateNumberUseCase(stateFlow.value.number) &&
+                    validatePasswordUseCase(stateFlow.value.password) &&
+                    stateFlow.value.confirmPassword == stateFlow.value.password
                 ) {
                     viewModelScope.launch {
                         stateFlow.value = stateFlow.value.copy(buttonEnabled = false)
                         try {
-                            val response: LoginResponse = repository.login(
-                                LoginRequest(
+                            val response: RegisterResponse = repository.register(
+                                RegisterRequest(
                                     phone = "+7${stateFlow.value.number}",
                                     password = stateFlow.value.password
                                 )
@@ -64,19 +66,26 @@ class LoginViewModel(
                     stateFlow.value = stateFlow.value.copy(showError = true)
                     stateFlow.value =
                         stateFlow.value.copy(errorText = "Пароль должен быть больше 8 символов")
+                } else if (stateFlow.value.confirmPassword != stateFlow.value.password) {
+                    stateFlow.value = stateFlow.value.copy(showError = true)
+                    stateFlow.value = stateFlow.value.copy(errorText = "Пароль не совпадает")
                 }
             }
 
-            is LoginEvent.onNumberChanged -> {
+            is RegisterEvent.onNumberChanged -> {
                 stateFlow.value = stateFlow.value.copy(number = event.value)
             }
 
-            is LoginEvent.onPasswordChanged -> {
+            is RegisterEvent.onPasswordChanged -> {
                 stateFlow.value = stateFlow.value.copy(password = event.value)
             }
 
-            LoginEvent.toRegister -> {
-                navController.navigate("register") {
+            is RegisterEvent.onConfirmPasswordChanged -> {
+                stateFlow.value = stateFlow.value.copy(confirmPassword = event.value)
+            }
+
+            RegisterEvent.toLogin -> {
+                navController.navigate("login") {
                     popUpTo(navController.graph.startDestinationId) { saveState = true }
                     launchSingleTop = true
                     restoreState = false

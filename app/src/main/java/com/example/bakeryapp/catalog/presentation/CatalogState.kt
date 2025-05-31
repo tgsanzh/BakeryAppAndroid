@@ -1,21 +1,14 @@
 package com.example.bakeryapp.catalog.presentation
 
+import com.example.bakeryapp.catalog.domain.Category
+import com.example.bakeryapp.catalog.domain.Product
+
 data class CatalogState(
     val search: String,
     val category: Int,
     val categories: List<Category>,
     val products: List<Product>,
+    val productsLoaded: Boolean,
+    val categoryLoaded: Boolean,
 )
 
-data class Product(
-    val id: Int,
-    val title: String,
-    val category_id: Int,
-    val imageUrl: String,
-    val price: Float,
-)
-
-data class Category(
-    val id: Int,
-    val name: String,
-)

@@ -1,14 +1,9 @@
 package com.example.bakeryapp.orders.presentation
 
-import com.example.bakeryapp.catalog.presentation.Product
+import com.example.bakeryapp.orders.domain.Orders
 
 data class OrdersState(
-    val orders: List<Order>,
+    val orders: List<Orders>,
+    val ordersLoaded: Boolean
 )
 
-data class Order(
-    val id: Int,
-    val title: String,
-    val products: String,
-    val price: Float,
-)

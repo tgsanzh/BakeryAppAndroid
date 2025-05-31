@@ -1,23 +1,14 @@
 package com.example.bakeryapp.cart.presentation
 
-import com.example.bakeryapp.catalog.presentation.Product
+import com.example.bakeryapp.cart.domain.CartObject
 
 data class CartState(
     val cartItems: List<CartObject>,
+    val errorText: String,
+    val showError: Boolean,
     val sum: Float,
-    val deliveryAdress: String
+    val deliveryAdress: String,
+    val cartLoaded: Boolean,
+    val buttonEnabled: Boolean,
 )
 
-data class CartObject(
-    val id: Int,
-    val userId: Int,
-    var quantity: Int,
-    val short_product: ShortProduct,
-)
-
-data class ShortProduct(
-    val id: Int,
-    val title: String,
-    val price: Float,
-    val imageUrl: String,
-)

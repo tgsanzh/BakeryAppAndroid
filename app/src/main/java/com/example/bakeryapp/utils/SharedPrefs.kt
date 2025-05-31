@@ -11,6 +11,7 @@ class SharedPrefs(
     fun setToken(token: String) {
         sharedPrefs.edit().putString("token", token).apply()
     }
+
     fun getToken(): String? {
         return sharedPrefs.getString("token", "")
     }

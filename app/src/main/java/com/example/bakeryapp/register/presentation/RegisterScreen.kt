@@ -1,4 +1,4 @@
-package com.example.bakeryapp.login.presentation
+package com.example.bakeryapp.register.presentation
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -40,7 +40,7 @@ import com.example.bakeryapp.appType
 import com.example.bakeryapp.utils.PhoneVisualTransformation
 
 @Composable
-fun LoginScreen(state: LoginState, onEvent: (LoginEvent) -> Unit) {
+fun RegisterScreen(state: RegisterState, onEvent: (RegisterEvent) -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize(),
@@ -50,12 +50,12 @@ fun LoginScreen(state: LoginState, onEvent: (LoginEvent) -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 100.dp),
+                .padding(bottom = 100.dp)
+                .padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "Вход",
+                text = "Регистрация",
                 style = appType.title
             )
 
@@ -83,7 +83,7 @@ fun LoginScreen(state: LoginState, onEvent: (LoginEvent) -> Unit) {
                     value = state.number,
                     onValueChange = {
                         val digitsOnly = it.filter { char -> char.isDigit() }.take(10)
-                        onEvent(LoginEvent.onNumberChanged(digitsOnly))
+                        onEvent(RegisterEvent.onNumberChanged(digitsOnly))
                     },
                     modifier = Modifier
                         .weight(1f)
@@ -115,7 +115,7 @@ fun LoginScreen(state: LoginState, onEvent: (LoginEvent) -> Unit) {
             TextField(
                 value = state.password,
                 onValueChange = {
-                    onEvent(LoginEvent.onPasswordChanged(it))
+                    onEvent(RegisterEvent.onPasswordChanged(it))
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -138,6 +138,34 @@ fun LoginScreen(state: LoginState, onEvent: (LoginEvent) -> Unit) {
                 textStyle = appType.inField,
             )
 
+            Spacer(Modifier.height(12.dp))
+
+            TextField(
+                value = state.confirmPassword,
+                onValueChange = {
+                    onEvent(RegisterEvent.onConfirmPasswordChanged(it))
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .border(2.dp, appColors.border, RoundedCornerShape(16.dp)),
+                colors = TextFieldDefaults.colors().copy(
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedContainerColor = appColors.background,
+                    unfocusedContainerColor = appColors.background,
+                    cursorColor = appColors.border
+                ),
+                placeholder = {
+                    Text(
+                        text = "Повторите пароль...",
+                        style = appType.inField.copy(color = appColors.grey)
+                    )
+                },
+                singleLine = true,
+                textStyle = appType.inField,
+            )
+
             if (state.showError) {
                 Spacer(Modifier.height(8.dp))
                 Text(
@@ -152,7 +180,7 @@ fun LoginScreen(state: LoginState, onEvent: (LoginEvent) -> Unit) {
             Spacer(Modifier.height(12.dp))
 
             Button(
-                onClick = { onEvent(LoginEvent.login(state.number)) },
+                onClick = { onEvent(RegisterEvent.register(state.number)) },
                 enabled = state.buttonEnabled,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -165,7 +193,7 @@ fun LoginScreen(state: LoginState, onEvent: (LoginEvent) -> Unit) {
             ) {
                 if (state.buttonEnabled)
                     Text(
-                        text = "Войти",
+                        text = "Зарегестрироваться",
                         style = appType.inButton
                     )
                 else
@@ -177,7 +205,7 @@ fun LoginScreen(state: LoginState, onEvent: (LoginEvent) -> Unit) {
         }
 
         Text(
-            text = "У меня нету аккаунта",
+            text = "У меня уже есть аккаунт",
             style = appType.inField.copy(color = appColors.blue),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -186,9 +214,8 @@ fun LoginScreen(state: LoginState, onEvent: (LoginEvent) -> Unit) {
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null
                 ) {
-                    onEvent(LoginEvent.toRegister)
+                    onEvent(RegisterEvent.toLogin)
                 }
         )
-
     }
 }

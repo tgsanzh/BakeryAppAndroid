@@ -1,12 +1,10 @@
 package com.example.bakeryapp.catalog.presentation
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -20,52 +18,41 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.bakeryapp.R
-import com.example.bakeryapp.TopScreenTitle
 import com.example.bakeryapp.appColors
 import com.example.bakeryapp.appType
 
 @Composable
-fun CatalogScreen(state: CatalogState, navController: NavController, onEvent: (CatalogEvent) -> Unit) {
+fun CatalogScreen(
+    state: CatalogState,
+    navController: NavController,
+    onEvent: (CatalogEvent) -> Unit
+) {
     LaunchedEffect(Unit) {
-        onEvent(CatalogEvent.loadCatalog)
         onEvent(CatalogEvent.loadCategory)
+        onEvent(CatalogEvent.loadCatalog)
     }
 
     Column(
@@ -103,6 +90,17 @@ fun CatalogScreen(state: CatalogState, navController: NavController, onEvent: (C
 
         Spacer(Modifier.height(16.dp))
 
+        if (!state.productsLoaded && !state.categoryLoaded) {
+            CircularProgressIndicator(
+                color = appColors.border,
+                modifier = Modifier
+                    .size(36.dp)
+                    .fillMaxWidth()
+                    .align(Alignment.CenterHorizontally)
+                    .padding(vertical = 16.dp)
+            )
+        }
+
         LazyRow(
             modifier = Modifier
                 .fillMaxWidth(),
@@ -129,25 +127,29 @@ fun CatalogScreen(state: CatalogState, navController: NavController, onEvent: (C
                             shape = RoundedCornerShape(12.dp),
                             color = appColors.border
                         )
-                        .background(color = if (state.category == category.id)
-                            appColors.border else appColors.background)
+                        .background(
+                            color = if (state.category == category.id)
+                                appColors.border else appColors.background
+                        )
                         .padding(vertical = 10.dp, horizontal = 16.dp),
                 )
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+//        Spacer(Modifier.height(16.dp))
 
-        LazyColumn (
+        LazyColumn(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
+            contentPadding = PaddingValues(bottom = 24.dp),
         ) {
             items(
                 items = state.products,
             ) { item ->
-                if((state.category == -1 || item.category_id == state.category) && item.title.contains(state.search))
-                {
+                if ((state.category == -1 || item.category_id == state.category) && item.title.contains(
+                        state.search
+                    )
+                ) {
                     Spacer(Modifier.height(16.dp))
                     Row(
                         modifier = Modifier
@@ -167,8 +169,7 @@ fun CatalogScreen(state: CatalogState, navController: NavController, onEvent: (C
                             modifier = Modifier
                                 .padding(8.dp)
                                 .size(120.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                            ,
+                                .clip(RoundedCornerShape(8.dp)),
                         )
                         Column(
                             modifier = Modifier
@@ -195,9 +196,12 @@ fun CatalogScreen(state: CatalogState, navController: NavController, onEvent: (C
                                 .fillMaxHeight()
                                 .clip(RoundedCornerShape(12.dp))
                                 .clickable {
-                                    onEvent( CatalogEvent.onOrder(item.id) )
+                                    onEvent(CatalogEvent.onOrder(item.id))
                                 }
-                                .background(color = appColors.blue, shape = RoundedCornerShape(12.dp)),
+                                .background(
+                                    color = appColors.blue,
+                                    shape = RoundedCornerShape(12.dp)
+                                ),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(16.5.dp)
                         ) {

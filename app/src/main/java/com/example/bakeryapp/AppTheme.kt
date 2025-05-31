@@ -1,20 +1,16 @@
 package com.example.bakeryapp
 
-import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 
 @Composable
-fun AppTheme (
+fun AppTheme(
     content: @Composable () -> Unit,
 ) {
     CompositionLocalProvider(
@@ -33,6 +29,7 @@ data class TextColors(
     val grey: Color,
     val blue: Color,
     val error: Color,
+    val green: Color,
 )
 
 val appColors = TextColors(
@@ -43,6 +40,7 @@ val appColors = TextColors(
     grey = Color(0xFF8E8E8E),
     blue = Color(0xFF3266C6),
     error = Color(0xFFAB2453),
+    green = Color(0xFF34e056),
 )
 
 data class TextType(
@@ -117,7 +115,7 @@ val appType = TextType(
         color = appColors.error
     ),
 
-)
+    )
 
 internal val LocalColors = staticCompositionLocalOf { appColors }
 internal val LocalType = staticCompositionLocalOf { appType }

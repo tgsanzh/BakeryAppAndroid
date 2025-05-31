@@ -8,25 +8,25 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.collectAsState
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.example.bakeryapp.login.presentation.LoginScreen
-import org.koin.androidx.compose.koinViewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.example.bakeryapp.cart.presentation.CartScreen
 import com.example.bakeryapp.cart.presentation.CartViewModel
-import com.example.bakeryapp.catalog.presentation.CatalogEvent
 import com.example.bakeryapp.catalog.presentation.CatalogScreen
 import com.example.bakeryapp.catalog.presentation.CatalogViewModel
-import com.example.bakeryapp.confirm.presentation.ConfirmScreen
-import com.example.bakeryapp.confirm.presentation.ConfirmViewModel
+import com.example.bakeryapp.login.presentation.LoginScreen
 import com.example.bakeryapp.login.presentation.LoginViewModel
-import com.example.bakeryapp.orders.presentation.OrdersEvent
 import com.example.bakeryapp.orders.presentation.OrdersScreen
 import com.example.bakeryapp.orders.presentation.OrdersViewModel
+import com.example.bakeryapp.register.presentation.RegisterScreen
+import com.example.bakeryapp.register.presentation.RegisterViewModel
+import com.example.bakeryapp.start.presentation.StartScreen
+import com.example.bakeryapp.start.presentation.StartViewModel
+import org.koin.androidx.compose.koinViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,11 +35,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
 
-            val currentDestination = navController.currentBackStackEntryAsState().value?.destination?.route
+            val currentDestination =
+                navController.currentBackStackEntryAsState().value?.destination?.route
             val isBottomBarVisible =
                 currentDestination == "catalog" ||
-                currentDestination == "cart" ||
-                currentDestination == "orders"
+                        currentDestination == "cart" ||
+                        currentDestination == "orders"
 
             AppTheme {
                 Scaffold(
@@ -50,13 +51,28 @@ class MainActivity : ComponentActivity() {
                 ) { paddingValues ->
                     NavHost(
                         navController,
-                        startDestination = "login",
+                        startDestination = "start",
                         modifier = Modifier
                             .background(color = appColors.background)
                             .padding(paddingValues)
                     ) {
                         composable("start") {
+                            val vm: StartViewModel = koinViewModel()
 
+                            StartScreen() {
+                                vm.dispatch(
+                                    event = it,
+                                    navigate = {
+                                        navController.navigate(it) {
+                                            popUpTo(navController.graph.startDestinationId) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = false
+                                        }
+                                    }
+                                )
+                            }
                         }
                         composable("login") {
                             val vm: LoginViewModel = koinViewModel()
@@ -65,12 +81,10 @@ class MainActivity : ComponentActivity() {
                                 vm.dispatch(it, navController)
                             }
                         }
-                        composable("confirm/{number}") {
-                            val number = it.arguments?.getString("number") ?: ""
-                            val vm: ConfirmViewModel = koinViewModel()
+                        composable("register") {
+                            val vm: RegisterViewModel = koinViewModel()
                             val state by vm.stateFlow.collectAsState()
-
-                            ConfirmScreen(number, state) {
+                            RegisterScreen(state) {
                                 vm.dispatch(it, navController)
                             }
                         }
@@ -78,7 +92,7 @@ class MainActivity : ComponentActivity() {
                             val vm: CatalogViewModel = koinViewModel()
                             val state by vm.stateFlow.collectAsState()
                             CatalogScreen(state, navController) {
-                                vm.dispatch(it, navController)
+                                vm.dispatch(it)
                             }
                         }
                         composable("cart") {

@@ -15,12 +15,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -31,7 +31,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -44,8 +43,6 @@ import com.example.bakeryapp.R
 import com.example.bakeryapp.TopScreenTitle
 import com.example.bakeryapp.appColors
 import com.example.bakeryapp.appType
-import com.example.bakeryapp.catalog.presentation.CatalogEvent
-import com.example.bakeryapp.login.presentation.LoginEvent
 
 @Composable
 fun CartScreen(state: CartState, navController: NavController, onEvent: (CartEvent) -> Unit) {
@@ -60,7 +57,16 @@ fun CartScreen(state: CartState, navController: NavController, onEvent: (CartEve
                 .fillMaxSize()
         ) {
             TopScreenTitle("Корзина")
-
+            if (!state.cartLoaded) {
+                CircularProgressIndicator(
+                    color = appColors.border,
+                    modifier = Modifier
+                        .size(36.dp)
+                        .fillMaxWidth()
+                        .align(Alignment.CenterHorizontally)
+                        .padding(vertical = 16.dp)
+                )
+            }
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
@@ -69,6 +75,7 @@ fun CartScreen(state: CartState, navController: NavController, onEvent: (CartEve
                 horizontalAlignment = Alignment.CenterHorizontally,
                 contentPadding = PaddingValues(top = 8.dp, bottom = 8.dp),
             ) {
+
                 items(
                     items = state.cartItems,
                 ) { item ->
@@ -90,8 +97,7 @@ fun CartScreen(state: CartState, navController: NavController, onEvent: (CartEve
                             modifier = Modifier
                                 .padding(8.dp)
                                 .size(132.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                            ,
+                                .clip(RoundedCornerShape(10.dp)),
                         )
                         Column(
                             modifier = Modifier
@@ -186,12 +192,23 @@ fun CartScreen(state: CartState, navController: NavController, onEvent: (CartEve
                     Text(
                         text = "Введите адресс...",
                         style = appType.inField.copy(color = appColors.grey)
-                    ) },
+                    )
+                },
                 singleLine = true,
                 textStyle = appType.inField,
             )
-            Button (
+
+            if (state.showError) {
+                Text(
+                    text = state.errorText,
+                    style = appType.error,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
+                )
+            }
+
+            Button(
                 onClick = { onEvent(CartEvent.onOrder) },
+                enabled = state.cartItems.isNotEmpty() && state.buttonEnabled,
                 modifier = Modifier
                     .padding(horizontal = 20.dp, vertical = 12.dp)
                     .fillMaxWidth()
@@ -202,13 +219,17 @@ fun CartScreen(state: CartState, navController: NavController, onEvent: (CartEve
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Text(
-                    text = "Оформить заказ",
-                    style = appType.inButton
-                )
+                if (state.buttonEnabled)
+                    Text(
+                        text = "Оформить заказ",
+                        style = appType.inButton
+                    )
+                else
+                    CircularProgressIndicator(
+                        color = appColors.background,
+                    )
             }
         }
-
 
 
     }

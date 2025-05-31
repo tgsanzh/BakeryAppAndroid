@@ -1,4 +1,4 @@
-package com.example.bakeryapp.login.data
+package com.example.bakeryapp.register.data
 
 import com.example.bakeryapp.BASE_URL
 import io.ktor.client.HttpClient
@@ -9,14 +9,14 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import org.koin.core.component.KoinComponent
 
-class LoginRepositoryImpl(
+class RegisterRepositoryImpl(
     private val client: HttpClient
-) : LoginRepository, KoinComponent {
-    override suspend fun login(loginData: LoginRequest): LoginResponse {
-        val response: LoginResponse = client.post("${BASE_URL}/users/login") {
+) : RegisterRepository, KoinComponent {
+    override suspend fun register(registerData: RegisterRequest): RegisterResponse {
+        val response: RegisterResponse = client.post("${BASE_URL}/users/register") {
             contentType(ContentType.Application.Json)
-            setBody(loginData)
-        }.body<LoginResponse>()
+            setBody(registerData)
+        }.body<RegisterResponse>()
         return response
     }
 }
