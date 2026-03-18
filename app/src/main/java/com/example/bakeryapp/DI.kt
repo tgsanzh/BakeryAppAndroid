@@ -17,8 +17,11 @@ import com.example.bakeryapp.orders.presentation.OrdersViewModel
 import com.example.bakeryapp.register.data.RegisterRepository
 import com.example.bakeryapp.register.data.RegisterRepositoryImpl
 import com.example.bakeryapp.register.presentation.RegisterViewModel
+import com.example.bakeryapp.start.data.StartRepository
+import com.example.bakeryapp.start.data.StartRepositoryImpl
 import com.example.bakeryapp.start.presentation.StartViewModel
 import com.example.bakeryapp.utils.SharedPrefs
+import com.example.bakeryapp.utils.ToastManager
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -28,22 +31,30 @@ val appModule = module {
     single { SharedPrefs(androidContext()) }
     single { ValidateNumberUseCase() }
     single { ValidatePasswordUseCase() }
+    single { ToastManager(androidContext()) }
 
-    viewModel { StartViewModel(get()) }
+    // SPLASH
+    viewModel { StartViewModel(get(), get()) }
+    single<StartRepository> { StartRepositoryImpl(get()) }
 
+    //LOGIN
     viewModel { LoginViewModel(get(), get(), get(), get()) }
     single<LoginRepository> { LoginRepositoryImpl(get()) }
 
+    //REGISTER
     viewModel { RegisterViewModel(get(), get(), get(), get()) }
     single<RegisterRepository> { RegisterRepositoryImpl(get()) }
 
-    viewModel { CatalogViewModel(get()) }
-    single<CatalogRepository> { CatalogRepositoryImpl(get(), get()) }
+    //CATALOG
+    viewModel { CatalogViewModel(get(), get()) }
+    single<CatalogRepository> { CatalogRepositoryImpl(get()) }
 
-    viewModel { CartViewModel(get()) }
-    single<CartRepository> { CartRepositoryImpl(get(), get()) }
+    //CART
+    viewModel { CartViewModel(get(), get()) }
+    single<CartRepository> { CartRepositoryImpl(get()) }
 
-    viewModel { OrdersViewModel(get(), get()) }
+    //ORDERS
+    viewModel { OrdersViewModel(get(), get(), get()) }
     single<OrdersRepository> { OrdersRepositoryImpl(get()) }
 
 }

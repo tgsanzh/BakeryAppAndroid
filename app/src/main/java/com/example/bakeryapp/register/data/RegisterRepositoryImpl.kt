@@ -12,11 +12,12 @@ import org.koin.core.component.KoinComponent
 class RegisterRepositoryImpl(
     private val client: HttpClient
 ) : RegisterRepository, KoinComponent {
-    override suspend fun register(registerData: RegisterRequest): RegisterResponse {
-        val response: RegisterResponse = client.post("${BASE_URL}/users/register") {
-            contentType(ContentType.Application.Json)
-            setBody(registerData)
-        }.body<RegisterResponse>()
-        return response
+    override suspend fun register(registerData: RegisterRequest): Result<RegisterResponse> {
+        return runCatching {
+            client.post("${BASE_URL}/users/register") {
+                contentType(ContentType.Application.Json)
+                setBody(registerData)
+            }.body<RegisterResponse>()
+        }
     }
 }

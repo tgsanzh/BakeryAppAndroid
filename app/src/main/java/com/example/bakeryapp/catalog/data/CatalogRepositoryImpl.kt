@@ -13,28 +13,27 @@ import io.ktor.http.contentType
 import org.koin.core.component.KoinComponent
 
 class CatalogRepositoryImpl(
-    val client: HttpClient,
-    val sharedPrefs: SharedPrefs
+    val client: HttpClient
 ) : CatalogRepository, KoinComponent {
-    override suspend fun loadCatalog(): List<ProductsDTO> {
-        val response: List<ProductsDTO> = client.get("${BASE_URL}/products/") {
-        }.body<List<ProductsDTO>>()
-        return response
+    override suspend fun loadCatalog(): Result<List<ProductsDTO>> {
+        return runCatching {
+            client.get("${BASE_URL}/products/").body<List<ProductsDTO>>()
+        }
     }
 
-    override suspend fun loadCategories(): List<CategoriesDTO> {
-        val response: List<CategoriesDTO> = client.get("${BASE_URL}/categories/") {
-        }.body<List<CategoriesDTO>>()
-        return response
+    override suspend fun loadCategories(): Result<List<CategoriesDTO>> {
+        return runCatching {
+            client.get("${BASE_URL}/categories/").body<List<CategoriesDTO>>()
+        }
     }
 
-    override suspend fun toCart(product_id: Int) {
+    override suspend fun toCart(product_id: Int): Result<Int> {
         val data = CartRequest(product_id = product_id)
-        Log.d("TOKEN", sharedPrefs.getToken().toString())
-        Log.d("ID", product_id.toString())
-        client.post("${BASE_URL}/cart/") {
-            contentType(ContentType.Application.Json)
-            setBody(data)
+        return runCatching {
+            client.post("${BASE_URL}/cart/") {
+                contentType(ContentType.Application.Json)
+                setBody(data)
+            }.status.value
         }
     }
 }

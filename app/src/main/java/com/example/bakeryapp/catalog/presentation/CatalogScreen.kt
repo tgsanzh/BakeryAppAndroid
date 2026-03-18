@@ -47,7 +47,6 @@ import com.example.bakeryapp.appType
 @Composable
 fun CatalogScreen(
     state: CatalogState,
-    navController: NavController,
     onEvent: (CatalogEvent) -> Unit
 ) {
     LaunchedEffect(Unit) {

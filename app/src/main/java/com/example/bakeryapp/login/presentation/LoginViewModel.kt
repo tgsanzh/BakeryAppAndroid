@@ -29,7 +29,11 @@ class LoginViewModel(
         )
     )
 
-    fun dispatch(event: LoginEvent, navController: NavController) {
+    fun dispatch(
+        event: LoginEvent,
+        toRegister: () -> Unit,
+        toCatalog: () -> Unit
+    ) {
         when (event) {
             is LoginEvent.login -> {
                 if (validateNumberUseCase(stateFlow.value.number) && validatePasswordUseCase(
@@ -38,32 +42,36 @@ class LoginViewModel(
                 ) {
                     viewModelScope.launch {
                         stateFlow.value = stateFlow.value.copy(buttonEnabled = false)
-                        try {
-                            val response: LoginResponse = repository.login(
-                                LoginRequest(
-                                    phone = "+7${stateFlow.value.number}",
-                                    password = stateFlow.value.password
-                                )
+                        repository.login(
+                            LoginRequest(
+                                phone = "+7${stateFlow.value.number}",
+                                password = stateFlow.value.password
                             )
+                        ).onSuccess { response ->
                             sharedPrefs.setToken(response.access_token)
                             resetHttpClient(sharedPrefs.context)
-                            navController.navigate("catalog") {
-                                popUpTo(0) { inclusive = true }
-                            }
-                        } catch (e: Exception) {
-                            stateFlow.value = stateFlow.value.copy(showError = true)
-                            stateFlow.value =
-                                stateFlow.value.copy(errorText = "Неправильный номер или пароль")
+                            toCatalog()
+                        }.onFailure { error ->
+                            stateFlow.value = stateFlow.value.copy(
+                                showError = true,
+                                errorText = "Неправильный номер или пароль"
+                            )
                         }
+
                         stateFlow.value = stateFlow.value.copy(buttonEnabled = true)
                     }
-                } else if (!validateNumberUseCase(stateFlow.value.number)) {
-                    stateFlow.value = stateFlow.value.copy(showError = true)
-                    stateFlow.value = stateFlow.value.copy(errorText = "Заполните номер")
-                } else if (!validatePasswordUseCase(stateFlow.value.password)) {
-                    stateFlow.value = stateFlow.value.copy(showError = true)
-                    stateFlow.value =
-                        stateFlow.value.copy(errorText = "Пароль должен быть больше 8 символов")
+                }
+                else if (!validateNumberUseCase(stateFlow.value.number)) {
+                    stateFlow.value = stateFlow.value.copy(
+                        showError = true,
+                        errorText = "Заполните номер"
+                    )
+                }
+                else if (!validatePasswordUseCase(stateFlow.value.password)) {
+                    stateFlow.value = stateFlow.value.copy(
+                        showError = true,
+                        errorText = "Пароль должен быть больше 8 символов"
+                    )
                 }
             }
 
@@ -76,11 +84,7 @@ class LoginViewModel(
             }
 
             LoginEvent.toRegister -> {
-                navController.navigate("register") {
-                    popUpTo(navController.graph.startDestinationId) { saveState = true }
-                    launchSingleTop = true
-                    restoreState = false
-                }
+                toRegister()
             }
         }
     }

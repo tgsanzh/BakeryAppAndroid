@@ -1,5 +1,5 @@
 package com.example.bakeryapp.orders.data
 
 interface OrdersRepository {
-    suspend fun loadOrders(): List<OrderDTO>
+    suspend fun loadOrders(): Result<List<OrderDTO>>
 }

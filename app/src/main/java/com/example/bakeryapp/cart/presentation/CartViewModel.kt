@@ -6,11 +6,12 @@ import androidx.navigation.NavController
 import com.example.bakeryapp.cart.data.CartRepository
 import com.example.bakeryapp.cart.domain.CartObject
 import com.example.bakeryapp.cart.domain.toEntity
+import com.example.bakeryapp.utils.ToastManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class CartViewModel(
-    val repository: CartRepository
+    val repository: CartRepository, val toastManager: ToastManager
 ) : ViewModel() {
     val stateFlow = MutableStateFlow(
         CartState(
@@ -24,7 +25,7 @@ class CartViewModel(
         )
     )
 
-    fun dispatch(event: CartEvent, navController: NavController) {
+    fun dispatch(event: CartEvent) {
         when (event) {
             is CartEvent.onOrder -> {
                 stateFlow.value = stateFlow.value.copy(buttonEnabled = false)
@@ -37,6 +38,7 @@ class CartViewModel(
                     stateFlow.value =
                         stateFlow.value.copy(showError = true, errorText = "Заполните адресс")
                 }
+
                 stateFlow.value = stateFlow.value.copy(buttonEnabled = true)
             }
 
@@ -46,7 +48,7 @@ class CartViewModel(
 
             is CartEvent.minus -> {
                 viewModelScope.launch {
-                    if (repository.minusToCart(event.value) == 200) {
+                    repository.minusToCart(event.value).onSuccess { response ->
                         val updatedItem = event.value.copy(quantity = event.value.quantity - 1)
                         if (updatedItem.quantity <= 0) {
                             loadCart()
@@ -57,6 +59,8 @@ class CartViewModel(
                                 }
                             stateFlow.value = stateFlow.value.copy(cartItems = updatedCarts)
                         }
+                    }.onFailure { error ->
+                        toastManager.show("Не удалось изменить!")
                     }
                     get_sum()
                 }
@@ -64,15 +68,17 @@ class CartViewModel(
 
             is CartEvent.plus -> {
                 viewModelScope.launch {
-                    if (repository.plusToCart(event.value) == 200) {
+                    repository.plusToCart(event.value).onSuccess { response ->
                         val updatedItem = event.value.copy(quantity = event.value.quantity + 1)
 
                         val updatedCarts = stateFlow.value.cartItems
                             .map {
                                 if (it.id == event.value.id) updatedItem else it
                             }
-
                         stateFlow.value = stateFlow.value.copy(cartItems = updatedCarts)
+
+                    }.onFailure { error ->
+                        toastManager.show("Не удалось изменить!")
                     }
                     get_sum()
                 }
@@ -94,16 +100,15 @@ class CartViewModel(
 
     fun loadCart() {
         viewModelScope.launch {
-            try {
-                val response: MutableList<CartObject> =
-                    repository.getCarts().toEntity().toMutableList()
-                stateFlow.value = stateFlow.value.copy(cartItems = response)
-                get_sum()
-            } catch (e: Exception) {
-
+            repository.getCarts().onSuccess { response ->
+                stateFlow.value = stateFlow.value.copy(
+                    cartItems = response.toEntity().toMutableList(),
+                    cartLoaded = true,
+                )
+            }.onFailure { error ->
+                toastManager.show("Не удалось получить данные с сервера.")
             }
-            stateFlow.value = stateFlow.value.copy(cartLoaded = true)
-
+            get_sum()
         }
     }
 

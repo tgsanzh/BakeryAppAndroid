@@ -15,37 +15,39 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
 class CartRepositoryImpl(
-    val client: HttpClient,
-    val sharedPrefs: SharedPrefs
+    val client: HttpClient
 ) : CartRepository {
-    override suspend fun getCarts(): List<CartDTO> {
-        val response: List<CartDTO> = client.get("${BASE_URL}/cart/").body<List<CartDTO>>()
-        return response
+    override suspend fun getCarts(): Result<List<CartDTO>> {
+        return runCatching { client.get("${BASE_URL}/cart/").body<List<CartDTO>>() }
     }
 
-    override suspend fun plusToCart(cart: CartObject): Int {
+    override suspend fun plusToCart(cart: CartObject): Result<Int> {
         val data = CartQuantityChange(action = "plus")
-        val response = client.put("${BASE_URL}/cart/${cart.id}/change-quantity") {
-            contentType(ContentType.Application.Json)
-            setBody(data)
+        return runCatching {
+            client.put("${BASE_URL}/cart/${cart.id}/change-quantity") {
+                contentType(ContentType.Application.Json)
+                setBody(data)
+            }.status.value
         }
-        return response.status.value
     }
 
-    override suspend fun minusToCart(cart: CartObject): Int {
+    override suspend fun minusToCart(cart: CartObject): Result<Int> {
         val data = CartQuantityChange(action = "minus")
-        val response = client.put("${BASE_URL}/cart/${cart.id}/change-quantity") {
-            contentType(ContentType.Application.Json)
-            setBody(data)
+        return runCatching {
+            client.put("${BASE_URL}/cart/${cart.id}/change-quantity") {
+                contentType(ContentType.Application.Json)
+                setBody(data)
+            }.status.value
         }
-        return response.status.value
     }
 
-    override suspend fun order(address: String) {
+    override suspend fun order(address: String): Result<Int> {
         val data = OrderData(delivery_address = address)
-        client.post("${BASE_URL}/orders/") {
-            contentType(ContentType.Application.Json)
-            setBody(data)
+        return runCatching {
+            client.post("${BASE_URL}/orders/") {
+                contentType(ContentType.Application.Json)
+                setBody(data)
+            }.status.value
         }
     }
 

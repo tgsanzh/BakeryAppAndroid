@@ -7,11 +7,13 @@ import com.example.bakeryapp.catalog.domain.Category
 import com.example.bakeryapp.catalog.domain.Product
 import com.example.bakeryapp.catalog.domain.toCategoryEntity
 import com.example.bakeryapp.catalog.domain.toProductEntity
+import com.example.bakeryapp.utils.ToastManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class CatalogViewModel(
-    val repository: CatalogRepository
+    val repository: CatalogRepository,
+    val toastManager: ToastManager
 ) : ViewModel() {
     val stateFlow = MutableStateFlow(
         CatalogState(
@@ -62,26 +64,27 @@ class CatalogViewModel(
 
     fun loadCatalog() {
         viewModelScope.launch {
-            try {
-                val response: List<Product> = repository.loadCatalog().toProductEntity()
-                stateFlow.value = stateFlow.value.copy(products = response)
-            } catch (e: Exception) {
-
+            repository.loadCatalog().onSuccess { response ->
+                stateFlow.value = stateFlow.value.copy(
+                    products = response.toProductEntity(),
+                    productsLoaded = true
+                )
+            }.onFailure {
+                toastManager.show("Не удалость загрузить каталог!")
             }
-            stateFlow.value = stateFlow.value.copy(productsLoaded = true)
-
         }
     }
 
     fun loadCategories() {
         viewModelScope.launch {
-            try {
-                val response: List<Category> = repository.loadCategories().toCategoryEntity()
-                stateFlow.value = stateFlow.value.copy(categories = response)
-            } catch (e: Exception) {
-
+            repository.loadCategories().onSuccess { response ->
+                stateFlow.value = stateFlow.value.copy(
+                    categories = response.toCategoryEntity(),
+                    categoryLoaded = true
+                )
+            }.onFailure { error ->
+                toastManager.show("Не удалость загрузить категорию!")
             }
-            stateFlow.value = stateFlow.value.copy(categoryLoaded = true)
         }
     }
 

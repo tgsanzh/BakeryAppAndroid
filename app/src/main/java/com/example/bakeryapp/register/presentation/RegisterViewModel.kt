@@ -1,5 +1,6 @@
 package com.example.bakeryapp.register.presentation
 
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
@@ -10,6 +11,9 @@ import com.example.bakeryapp.register.data.RegisterRequest
 import com.example.bakeryapp.register.data.RegisterResponse
 import com.example.bakeryapp.resetHttpClient
 import com.example.bakeryapp.utils.SharedPrefs
+import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.plugins.ResponseException
+import io.ktor.client.plugins.ServerResponseException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
@@ -30,7 +34,12 @@ class RegisterViewModel(
         )
     )
 
-    fun dispatch(event: RegisterEvent, navController: NavController) {
+    fun dispatch(
+        event: RegisterEvent,
+        toLogin: () -> Unit,
+        toCatalog: () -> Unit
+    )
+    {
         when (event) {
             is RegisterEvent.register -> {
                 if (
@@ -40,35 +49,45 @@ class RegisterViewModel(
                 ) {
                     viewModelScope.launch {
                         stateFlow.value = stateFlow.value.copy(buttonEnabled = false)
-                        try {
-                            val response: RegisterResponse = repository.register(
-                                RegisterRequest(
-                                    phone = "+7${stateFlow.value.number}",
-                                    password = stateFlow.value.password
-                                )
+                        repository.register(
+                            RegisterRequest(
+                                phone = "+7${stateFlow.value.number}",
+                                password = stateFlow.value.password
                             )
+                        ).onSuccess { response ->
                             sharedPrefs.setToken(response.access_token)
                             resetHttpClient(sharedPrefs.context)
-                            navController.navigate("catalog") {
-                                popUpTo(0) { inclusive = true }
+                            toCatalog()
+                        }.onFailure { error ->
+                            val errorText = when(error) {
+                                is ClientRequestException -> "Ошибка ${error.response.status.value}"
+                                is ServerResponseException -> "Ошибка ${error.response.status.value}"
+                                is ResponseException -> "Ошибка ${error.response.status.value}"
+                                else -> "Подключение к серверу невозможно"
                             }
-                        } catch (e: Exception) {
-                            stateFlow.value = stateFlow.value.copy(showError = true)
-                            stateFlow.value =
-                                stateFlow.value.copy(errorText = "Неправильный номер или пароль")
+                            stateFlow.value = stateFlow.value.copy(showError = true, errorText = errorText)
                         }
                         stateFlow.value = stateFlow.value.copy(buttonEnabled = true)
+
                     }
-                } else if (!validateNumberUseCase(stateFlow.value.number)) {
-                    stateFlow.value = stateFlow.value.copy(showError = true)
-                    stateFlow.value = stateFlow.value.copy(errorText = "Заполните номер")
-                } else if (!validatePasswordUseCase(stateFlow.value.password)) {
-                    stateFlow.value = stateFlow.value.copy(showError = true)
-                    stateFlow.value =
-                        stateFlow.value.copy(errorText = "Пароль должен быть больше 8 символов")
-                } else if (stateFlow.value.confirmPassword != stateFlow.value.password) {
-                    stateFlow.value = stateFlow.value.copy(showError = true)
-                    stateFlow.value = stateFlow.value.copy(errorText = "Пароль не совпадает")
+                }
+                else if (!validateNumberUseCase(stateFlow.value.number)) {
+                    stateFlow.value = stateFlow.value.copy(
+                        showError = true,
+                        errorText = "Заполните номер"
+                    )
+                }
+                else if (!validatePasswordUseCase(stateFlow.value.password)) {
+                    stateFlow.value = stateFlow.value.copy(
+                        showError = true,
+                        errorText = "Пароль должен быть больше 8 символов"
+                    )
+                }
+                else if (stateFlow.value.confirmPassword != stateFlow.value.password) {
+                    stateFlow.value = stateFlow.value.copy(
+                        showError = true,
+                        errorText = "Пароль не совпадает"
+                    )
                 }
             }
 
@@ -85,11 +104,7 @@ class RegisterViewModel(
             }
 
             RegisterEvent.toLogin -> {
-                navController.navigate("login") {
-                    popUpTo(navController.graph.startDestinationId) { saveState = true }
-                    launchSingleTop = true
-                    restoreState = false
-                }
+                toLogin()
             }
         }
     }

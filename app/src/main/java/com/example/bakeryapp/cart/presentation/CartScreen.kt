@@ -45,7 +45,7 @@ import com.example.bakeryapp.appColors
 import com.example.bakeryapp.appType
 
 @Composable
-fun CartScreen(state: CartState, navController: NavController, onEvent: (CartEvent) -> Unit) {
+fun CartScreen(state: CartState, onEvent: (CartEvent) -> Unit) {
     LaunchedEffect(Unit) {
         onEvent(CartEvent.loadCarts)
     }

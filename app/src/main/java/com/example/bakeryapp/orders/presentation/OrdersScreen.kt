@@ -34,7 +34,7 @@ import com.example.bakeryapp.appColors
 import com.example.bakeryapp.appType
 
 @Composable
-fun OrdersScreen(state: OrdersState, navController: NavController, onEvent: (OrdersEvent) -> Unit) {
+fun OrdersScreen(state: OrdersState, onEvent: (OrdersEvent) -> Unit) {
 
     LaunchedEffect(Unit) {
         onEvent(OrdersEvent.loadData)

@@ -8,12 +8,14 @@ import com.example.bakeryapp.orders.domain.Orders
 import com.example.bakeryapp.orders.domain.toEntity
 import com.example.bakeryapp.resetHttpClient
 import com.example.bakeryapp.utils.SharedPrefs
+import com.example.bakeryapp.utils.ToastManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class OrdersViewModel(
     val repository: OrdersRepository,
     val sharedPrefs: SharedPrefs,
+    val toastManager: ToastManager,
 ) : ViewModel() {
     val stateFlow = MutableStateFlow(
         OrdersState(
@@ -22,23 +24,24 @@ class OrdersViewModel(
         )
     )
 
-    fun dispatch(event: OrdersEvent, navController: NavController) {
+    fun dispatch(event: OrdersEvent, navigateToLogin: () -> Unit) {
         when (event) {
             is OrdersEvent.leaveAccount -> {
                 sharedPrefs.setToken("")
                 resetHttpClient(sharedPrefs.context)
-                navController.navigate("login") {
-                    popUpTo(navController.graph.startDestinationId) { saveState = true }
-                    launchSingleTop = true
-                    restoreState = false
-                }
+                navigateToLogin()
             }
 
             OrdersEvent.loadData -> {
                 viewModelScope.launch {
-                    val response: List<Orders> = repository.loadOrders().toEntity()
-                    stateFlow.value = stateFlow.value.copy(orders = response)
-                    stateFlow.value = stateFlow.value.copy(ordersLoaded = true)
+                    repository.loadOrders().onSuccess { response ->
+                        stateFlow.value = stateFlow.value.copy(
+                            orders = response.toEntity(),
+                            ordersLoaded = true
+                        )
+                    }.onFailure {
+                        toastManager.show("Не удалость загрузить заказы.")
+                    }
 
                 }
             }

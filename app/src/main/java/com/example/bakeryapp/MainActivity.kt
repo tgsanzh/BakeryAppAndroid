@@ -78,20 +78,48 @@ class MainActivity : ComponentActivity() {
                             val vm: LoginViewModel = koinViewModel()
                             val state by vm.stateFlow.collectAsState()
                             LoginScreen(state) {
-                                vm.dispatch(it, navController)
+                                vm.dispatch(
+                                    it,
+                                    toRegister = {
+                                        navController.navigate("register") {
+                                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = false
+                                        }
+                                    },
+                                    toCatalog = {
+                                        navController.navigate("catalog") {
+                                            popUpTo(0) { inclusive = true }
+                                        }
+                                    }
+                                )
                             }
                         }
                         composable("register") {
                             val vm: RegisterViewModel = koinViewModel()
                             val state by vm.stateFlow.collectAsState()
                             RegisterScreen(state) {
-                                vm.dispatch(it, navController)
+                                vm.dispatch(
+                                    it,
+                                    toLogin = {
+                                        navController.navigate("login") {
+                                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = false
+                                        }
+                                    },
+                                    toCatalog = {
+                                        navController.navigate("catalog") {
+                                            popUpTo(0) { inclusive = true }
+                                        }
+                                    }
+                                )
                             }
                         }
                         composable("catalog") {
                             val vm: CatalogViewModel = koinViewModel()
                             val state by vm.stateFlow.collectAsState()
-                            CatalogScreen(state, navController) {
+                            CatalogScreen(state) {
                                 vm.dispatch(it)
                             }
                         }
@@ -99,16 +127,25 @@ class MainActivity : ComponentActivity() {
                             val vm: CartViewModel = koinViewModel()
                             val state by vm.stateFlow.collectAsState()
 
-                            CartScreen(state, navController) {
-                                vm.dispatch(it, navController)
+                            CartScreen(state) {
+                                vm.dispatch(it)
                             }
                         }
                         composable("orders") {
                             val vm: OrdersViewModel = koinViewModel()
                             val state by vm.stateFlow.collectAsState()
 
-                            OrdersScreen(state, navController) {
-                                vm.dispatch(it, navController)
+                            OrdersScreen(state) {
+                                vm.dispatch(
+                                    it,
+                                    navigateToLogin = {
+                                        navController.navigate("login") {
+                                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = false
+                                        }
+                                    }
+                                )
                             }
                         }
                     }

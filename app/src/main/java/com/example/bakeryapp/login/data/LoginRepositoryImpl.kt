@@ -12,11 +12,12 @@ import org.koin.core.component.KoinComponent
 class LoginRepositoryImpl(
     private val client: HttpClient
 ) : LoginRepository, KoinComponent {
-    override suspend fun login(loginData: LoginRequest): LoginResponse {
-        val response: LoginResponse = client.post("${BASE_URL}/users/login") {
-            contentType(ContentType.Application.Json)
-            setBody(loginData)
-        }.body<LoginResponse>()
-        return response
+    override suspend fun login(loginData: LoginRequest): Result<LoginResponse> {
+        return runCatching {
+            client.post("${BASE_URL}/users/login") {
+                contentType(ContentType.Application.Json)
+                setBody(loginData)
+            }.body<LoginResponse>()
+        }
     }
 }
